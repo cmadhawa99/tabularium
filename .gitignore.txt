@@ -1,0 +1,38 @@
+# --- Python Basics ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Virtual Environments (Crucial) ---
+# Ignores the huge folder containing libraries
+.venv/
+venv/
+env/
+ENV/
+
+# --- Environment Variables & Secrets ---
+# NEVER commit your database passwords to Git
+.env
+.env.local
+secrets.py
+
+# --- PyInstaller / Builds ---
+# Generated when you create the .exe file later
+*.spec
+dist/
+build/
+*.exe
+
+# --- IDE Settings ---
+# Ignores local VS Code / PyCharm settings
+.vscode/
+.idea/
+
+# --- OS Generated Files ---
+.DS_Store
+Thumbs.db
+
+# --- Project Specific ---
+# If you have a local folder for testing PDF uploads
+storage/
+temp_downloads/

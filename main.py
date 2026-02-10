@@ -1,0 +1,1 @@
+import sysfrom PyQt6.QtWidgets import QApplicationfrom app.ui.main_window import MainWindowif __name__ == "__main__":    app = QApplication(sys.argv)    # We load the window from our new UI file    window = MainWindow()    window.show()    sys.exit(app.exec())
