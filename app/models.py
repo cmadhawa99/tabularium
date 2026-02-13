@@ -39,24 +39,24 @@ class FileRecord(Base):
     is_removed = Column(Boolean, default=False)
 
     #Relationship to borrowing history
-    borrow_history = relationship("BorrowedRecord", back_populates="file")
+    borrow_history = relationship("BorrowRecord", back_populates="file")
 
-    class BorrowRecord(Base):
-        __tablename__ = 'borrow_records'
+class BorrowRecord(Base):
+    __tablename__ = 'borrow_records'
 
-        id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
 
-        # --- FOREIGN KEY CHANGE ---
-        file_rr_number = Column(String, ForeignKey('file_records.rr_number'), nullable=False)
+    # --- FOREIGN KEY CHANGE ---
+    file_rr_number = Column(String, ForeignKey('file_records.rr_number'), nullable=False)
 
-        # --- BORROWING DETAILS ---
-        borrower_name = Column(String, nullable=False)
-        borrowed_date = Column(Date, nullable=False)
+     # --- BORROWING DETAILS ---
+    borrower_name = Column(String, nullable=False)
+    borrowed_date = Column(Date, nullable=False)
 
-        # --- RETURN DETAILS ---
-        returned_date = Column(Date, nullable=True)
-        is_returned = Column(Boolean, default=False)
+    # --- RETURN DETAILS ---
+    returned_date = Column(Date, nullable=True)
+    is_returned = Column(Boolean, default=False)
 
-        # Link back to parent file
-        file = relationship("FileRecord", back_populates="borrow_history")
+    # Link back to parent file
+    file = relationship("FileRecord", back_populates="borrow_history")
 
