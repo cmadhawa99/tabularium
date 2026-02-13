@@ -6,6 +6,8 @@ from app.ui.themes import get_stylesheet
 from app.controllers import ArchiveController
 from app.ui.pages.add_file_page import AddFilePage
 from app.ui.pages.search_page import SearchPage
+from app.ui.pages.circulation_page import CirculationPage
+from app.ui.pages.settings_page import SettingsPage
 
 
 class MainWindow(QMainWindow):
@@ -47,8 +49,19 @@ class MainWindow(QMainWindow):
         self.search_page = SearchPage(self.controller)
         self.stack.addWidget(self.search_page)
 
+        # Index 2: Circulation Page
+        self.circulation_page = CirculationPage(self.controller)
+        self.stack.addWidget(self.circulation_page)
+
+        # Index 3: Add Page
         self.add_file_page = AddFilePage(self.controller)
         self.stack.addWidget(self.add_file_page)
+
+        # Index 4: Settings Page
+        self.settings_page = SettingsPage(self.controller)
+        self.stack.addWidget(self.settings_page)
+
+
         self.stack.currentChanged.connect(self.on_page_changed)
 
         self.content_layout.addWidget(self.stack)
@@ -99,12 +112,16 @@ class MainWindow(QMainWindow):
         self.btn_search = self.add_nav_btn("Search Files", 'fa5s.search')
         self.btn_search.clicked.connect(lambda: self.stack.setCurrentIndex(1))
 
-        self.btn_add = self.add_nav_btn("Add New File", 'fa5s.plus-circle')
-        self.btn_add.clicked.connect(lambda: self.stack.setCurrentIndex(2))
-
         self.btn_borrow = self.add_nav_btn("Circulation", 'fa5s.exchange-alt')
+        self.btn_borrow.clicked.connect(lambda: self.stack.setCurrentIndex(2))
+
+        self.btn_add = self.add_nav_btn("Add New File", 'fa5s.plus-circle')
+        self.btn_add.clicked.connect(lambda: self.stack.setCurrentIndex(3))
+
         self.btn_reports = self.add_nav_btn("Reports", 'fa5s.file-alt')
+
         self.btn_settings = self.add_nav_btn("Settings", 'fa5s.cog')
+        self.btn_settings.clicked.connect(lambda: self.stack.setCurrentIndex(4))
 
         self.sidebar_layout.addStretch()
 

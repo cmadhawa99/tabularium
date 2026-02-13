@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QLineEdit, QDateEdit, QComboBox, QPushButton,
                              QLabel, QFrame, QMessageBox, QScrollArea)
 from PyQt6.QtCore import Qt, QDate
+from app.settings_manager import settings
 
 
 class AddFilePage(QWidget):
@@ -17,10 +18,10 @@ class AddFilePage(QWidget):
 
         # 1. Header
         header = QLabel("Add New File Record")
-        header.setObjectName("PageTitle")  # Uses your theme font
+        header.setObjectName("PageTitle")
         layout.addWidget(header)
 
-        # 2. Scroll Area (In case the form is too tall for small screens)
+        # 2. Scroll Area
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
@@ -31,7 +32,6 @@ class AddFilePage(QWidget):
         form_layout.setHorizontalSpacing(20)
 
         # --- FIELD DEFINITIONS ---
-        # Helper to create nice labels
         def add_field(label_text, widget, row, col, width=1):
             lbl = QLabel(label_text)
             lbl.setStyleSheet("color: #8f9bb3; font-weight: bold;")
@@ -48,7 +48,8 @@ class AddFilePage(QWidget):
         add_field("Serial Number (අනු අංකය)", self.inp_serial, 0, 1)
 
         # Row 2: Classification
-        self.inp_sector = QLineEdit()
+        self.inp_sector = QComboBox()
+        self.inp_sector.addItems(settings.get("master_data", "sectors"))
         add_field("Sector (අංශය)", self.inp_sector, 2, 0)
 
         self.inp_subject = QLineEdit()
@@ -56,11 +57,11 @@ class AddFilePage(QWidget):
 
         # Row 4: File Details
         self.inp_name = QLineEdit()
-        add_field("File Name (ගොණුවේ නම) *", self.inp_name, 4, 0, 2)  # Spans 2 cols
+        add_field("File Name (ගොණුවේ නම) *", self.inp_name, 4, 0, 2)
 
         # Row 6: Type & Pages
         self.inp_type = QComboBox()
-        self.inp_type.addItems(["Normal File", "Special File (විශේෂ)"])
+        self.inp_type.addItems(settings.get("master_data", "file_types"))
         add_field("File Type", self.inp_type, 6, 0)
 
         self.inp_pages = QLineEdit()
@@ -79,7 +80,7 @@ class AddFilePage(QWidget):
         self.inp_end.setDate(QDate.currentDate())
         add_field("End Date (අවසන් කළ දිනය)", self.inp_end, 8, 1)
 
-        # Row 10: Location (The Shelf)
+        # Row 10: Location
         self.inp_shelf = QLineEdit()
         add_field("Shelf No (රාක්ක අංකය)", self.inp_shelf, 10, 0)
 
@@ -122,7 +123,7 @@ class AddFilePage(QWidget):
         data = {
             "rr_number": self.inp_rr.text().strip(),
             "serial_number": int(self.inp_serial.text()) if self.inp_serial.text().isdigit() else None,
-            "sector": self.inp_sector.text(),
+            "sector": self.inp_sector.currentText(),
             "subject_number": self.inp_subject.text(),
             "file_name": self.inp_name.text(),
             "file_type": self.inp_type.currentText(),
@@ -146,11 +147,12 @@ class AddFilePage(QWidget):
     def clear_form(self):
         self.inp_rr.clear()
         self.inp_serial.clear()
-        self.inp_sector.clear()
         self.inp_subject.clear()
         self.inp_name.clear()
         self.inp_pages.clear()
         self.inp_shelf.clear()
         self.inp_deck.clear()
         self.inp_file_no.clear()
+        self.inp_sector.setCurrentIndex(0)
+        self.inp_type.setCurrentIndex(0)
         self.inp_rr.setFocus()

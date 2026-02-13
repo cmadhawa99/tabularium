@@ -121,3 +121,40 @@ class ArchiveController:
             "borrowed": borrowed,
             "removed": removed
         }
+
+    def get_circulation_history(self, page=1, page_size=50, search_text=""):
+        """
+        Fetches borrow records with pagination
+        Returns record_list and total_count
+        """
+
+        try:
+            query = self.db.query(BorrowRecord)
+
+            # 1) Apply Search Filter if text exists
+            if search_text:
+                search_fmt = f"%{search_text}%"
+                query = query.filter(
+                    or_(
+                        BorrowRecord.file_rr_number.ilike(search_fmt),
+                        BorrowRecord.borrower_name.ilike(search_fmt)
+                    )
+                )
+
+            # 2) Calculate the total
+            total_records = query.count()
+
+            # 3) Apply Pagination
+            offset = (page - 1) * page_size
+
+            records = query \
+                .order_by(desc(BorrowRecord.borrowed_date)) \
+                .limit(page_size) \
+                .offset(offset) \
+                .all()
+
+            return records, total_records
+
+        except Exception as e:
+            print(f"History Error: {e}")
+            return [], 0

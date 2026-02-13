@@ -1,0 +1,31 @@
+{
+    "general": {
+        "language": "English",
+        "theme": "dark",
+        "page_size": 25
+    },
+    "backup": {
+        "auto_backup": true,
+        "backup_path": "C:/Users/PCS/Pictures/arhiebes"
+    },
+    "master_data": {
+        "sectors": [
+            "Land Division",
+            "Administration",
+            "Planning",
+            "Samurdhi"
+        ],
+        "subjects": [
+            "L-01",
+            "L-02",
+            "AC-55",
+            "AD-10",
+            "PL-99"
+        ],
+        "file_types": [
+            "Normal",
+            "Special (\u0dc0\u0dd2\u0dc1\u0dda\u0dc2)",
+            "Confidential"
+        ]
+    }
+}
