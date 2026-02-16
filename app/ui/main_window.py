@@ -8,6 +8,7 @@ from app.ui.pages.add_file_page import AddFilePage
 from app.ui.pages.search_page import SearchPage
 from app.ui.pages.circulation_page import CirculationPage
 from app.ui.pages.settings_page import SettingsPage
+from app.ui.pages.reports_page import ReportsPage
 
 
 class MainWindow(QMainWindow):
@@ -57,7 +58,11 @@ class MainWindow(QMainWindow):
         self.add_file_page = AddFilePage(self.controller)
         self.stack.addWidget(self.add_file_page)
 
-        # Index 4: Settings Page
+        # Index 4: Report Page
+        self.report_page = ReportsPage(self.controller)
+        self.stack.addWidget(self.report_page)
+
+        # Index 5: Settings Page
         self.settings_page = SettingsPage(self.controller)
         self.stack.addWidget(self.settings_page)
 
@@ -119,9 +124,10 @@ class MainWindow(QMainWindow):
         self.btn_add.clicked.connect(lambda: self.stack.setCurrentIndex(3))
 
         self.btn_reports = self.add_nav_btn("Reports", 'fa5s.file-alt')
+        self.btn_reports.clicked.connect(lambda: self.stack.setCurrentIndex(4))
 
         self.btn_settings = self.add_nav_btn("Settings", 'fa5s.cog')
-        self.btn_settings.clicked.connect(lambda: self.stack.setCurrentIndex(4))
+        self.btn_settings.clicked.connect(lambda: self.stack.setCurrentIndex(5))
 
         self.sidebar_layout.addStretch()
 

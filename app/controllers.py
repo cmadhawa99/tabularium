@@ -158,3 +158,14 @@ class ArchiveController:
         except Exception as e:
             print(f"History Error: {e}")
             return [], 0
+
+    def get_all_borrow_records(self):
+        """
+        Fetches all borrow records for exporting
+        """
+        try:
+            # Order by most recent first
+            return self.db.query(BorrowRecord).order_by(desc(BorrowRecord.borrowed_date)).all()
+        except Exception as e:
+            print(f"Export Error: {e}")
+            return []

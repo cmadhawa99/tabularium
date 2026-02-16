@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QBrush
 import qtawesome as qta
-from app.ui.dialogs import FileDetailDialog  # <--- Import the new dialog
+from app.ui.dialogs import FileDetailDialog
 
 
 class SearchPage(QWidget):
