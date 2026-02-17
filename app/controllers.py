@@ -4,10 +4,38 @@ from datetime import date
 from .database import SessionLocal
 from .models import FileRecord, BorrowRecord
 
+import bcrypt
+from . models import User
+from app.security_utils import SecurityUtils
+
 
 class ArchiveController:
     def __init__(self):
         self.db: Session = SessionLocal()
+
+    def attempt_login(self, username, password, code_input):
+        """"""
+        user = self.db.query(User).filter(User.username == username).first()
+
+        if not user:
+            return False, "Invalid credentials", None
+        if not user.is_active:
+            return False, "Account has been deactivated", None
+
+        # Verifying pw, bcrypt requires bytes
+        if not bcrypt.checkpw(password.encode("utf-8"), user.password_hash.encode("utf-8")):
+            return False, "Invalid credentials", None
+
+        # Verify 2FA
+        if user.totp_secret:
+            if not SecurityUtils.verify_code(user.totp_secret, code_input):
+                return False, "Invalid code", None
+
+        else:
+            pass
+
+        return True, "Successfully logged in", user.role
+
 
     def add_new_file(self, data):
         try:

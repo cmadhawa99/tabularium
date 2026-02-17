@@ -60,3 +60,15 @@ class BorrowRecord(Base):
     # Link back to parent file
     file = relationship("FileRecord", back_populates="borrow_history")
 
+class User(Base):
+    __tablename__ = 'users'
+
+    id =  Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, default="Viewer")
+
+    # Security Fields
+    totp_secret = Column(String, nullable=True) #2FA
+    is_active = Column(Boolean, default=True)
+
