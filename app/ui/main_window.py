@@ -9,6 +9,7 @@ from app.ui.pages.search_page import SearchPage
 from app.ui.pages.circulation_page import CirculationPage
 from app.ui.pages.settings_page import SettingsPage
 from app.ui.pages.reports_page import ReportsPage
+from app.ui.pages.disposal_page import DisposalPage
 
 
 class MainWindow(QMainWindow):
@@ -65,6 +66,10 @@ class MainWindow(QMainWindow):
         # Index 5: Settings Page
         self.settings_page = SettingsPage(self.controller)
         self.stack.addWidget(self.settings_page)
+
+        # Index 6: Disposal Page
+        self.disposal_page = DisposalPage(self.controller)
+        self.stack.addWidget(self.disposal_page)
 
 
         self.stack.currentChanged.connect(self.on_page_changed)
@@ -125,6 +130,9 @@ class MainWindow(QMainWindow):
 
         self.btn_reports = self.add_nav_btn("Reports", 'fa5s.file-alt')
         self.btn_reports.clicked.connect(lambda: self.stack.setCurrentIndex(4))
+
+        self.btn_disposal =  self.add_nav_btn("Disposal", 'fa5s.trash-alt')
+        self.btn_disposal.clicked.connect(lambda: self.stack.setCurrentIndex(6))
 
         self.btn_settings = self.add_nav_btn("Settings", 'fa5s.cog')
         self.btn_settings.clicked.connect(lambda: self.stack.setCurrentIndex(5))

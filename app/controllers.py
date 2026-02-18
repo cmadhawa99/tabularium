@@ -197,3 +197,54 @@ class ArchiveController:
         except Exception as e:
             print(f"Export Error: {e}")
             return []
+
+
+    def schedule_removal(self, rr_number, removal_date):
+        """
+        Sets the 'To Be Removed' date.
+        Cannot perform if the file is already permanently removed.
+        """
+
+        try:
+            file_record = self.db.query(FileRecord).filter(FileRecord.rr_number == rr_number).first()
+
+            if not file_record:
+                return False, f"Error: File '{rr_number}' does not exist!"
+
+            if file_record.is_removed:
+                return False, f"Cannot schedule removal: File is already removed. Record is locked!"
+
+            file_record.to_be_removed_date = removal_date
+            self.db.commit()
+            return True, f"File '{rr_number}' scheduled for removal on '{removal_date}'."
+
+        except Exception as e:
+            self.db.rollback()
+            return False, f"Database Error: {str(e)}"
+
+
+    def confirm_removal(self, rr_number):
+        """
+        Marks the file as perma removed
+        this locks the record from further edits
+        """
+
+        try:
+            file_record = self.db.query(FileRecord).filter(FileRecord.rr_number == rr_number).first()
+
+            if not file_record:
+                return False, f"Error: File '{rr_number}' not found."
+
+            if file_record.is_removed:
+                return False, f"'{rr_number}' File is already removed."
+
+            file_record.is_removed = True
+            file_record.removed_date = date.today()
+            file_record.current_status = "Removed"
+
+            self.db.commit()
+            return True, f"File '{rr_number}' was successfully removed! Record is now locked"
+
+        except Exception as e:
+            self.db.rollback()
+            return False, f"Database Error: {str(e)}"
