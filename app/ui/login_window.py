@@ -1,7 +1,10 @@
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
-                             QPushButton, QLabel, QFrame, QMessageBox)
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLineEdit,
+                             QPushButton, QLabel, QFrame, QMessageBox, QGraphicsDropShadowEffect)
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QColor
 import qtawesome as qta
+from app.ui.themes import get_stylesheet
+from app.settings_manager import settings
 
 
 class LoginWindow(QWidget):
@@ -12,52 +15,61 @@ class LoginWindow(QWidget):
         self.controller = controller
         self.setWindowTitle("Secure Login - WPDC Archive")
         self.setFixedSize(450, 550)
-        self.setStyleSheet("background-color: #1e1e2f; color: white;")
+
+        theme = settings.get("general", "theme") if settings.get("general", "theme") else "dark"
+        self.setStyleSheet(get_stylesheet(theme))
 
         self.setup_ui()
+
+    def create_glass_panel(self):
+        frame = QFrame()
+        frame.setObjectName("Card")
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(20)
+        shadow.setOffset(0, 5)
+        shadow.setColor(QColor(0, 0, 0, 40))
+        frame.setGraphicsEffect(shadow)
+        return frame
 
     def setup_ui(self):
         layout = QVBoxLayout(self)
         layout.setSpacing(20)
         layout.setContentsMargins(40, 40, 40, 40)
 
-        # Logo / Icon
-        # --------------------------------------------------------------------------------------------------------------
+        theme = settings.get("general", "theme")
+        accent_color = "#0f5132" if theme == "light" else "#d4af37"
+
         lbl_icon = QLabel()
-        lbl_icon.setPixmap(qta.icon('fa5s.user-lock', color='#4d7cfe').pixmap(80, 80))
+        lbl_icon.setPixmap(qta.icon('fa5s.user-lock', color=accent_color).pixmap(80, 80))
         lbl_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(lbl_icon)
 
         lbl_title = QLabel("Authorized Access Only")
-        lbl_title.setStyleSheet("font-size: 18px; font-weight: bold; color: #8f9bb3; margin-bottom: 20px;")
+        lbl_title.setStyleSheet(
+            f"font-size: 18px; font-family: 'Times New Roman', serif; font-weight: bold; color: {accent_color}; margin-bottom: 10px;")
         lbl_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(lbl_title)
 
-        # Input Fields Container
-        # --------------------------------------------------------------------------------------------------------------
-        form_frame = QFrame()
-        form_frame.setStyleSheet("background-color: #27293d; border-radius: 10px; padding: 20px;")
+        form_frame = self.create_glass_panel()
         form_layout = QVBoxLayout(form_frame)
-        form_layout.setSpacing(15)
+        form_layout.setSpacing(20)
+        form_layout.setContentsMargins(25, 30, 25, 30)
 
         self.txt_user = QLineEdit()
         self.txt_user.setPlaceholderText("Username")
-        self.txt_user.setStyleSheet(
-            "padding: 12px; border: 1px solid #4d7cfe; border-radius: 5px; background: #1e1e2f; color: white;")
+        self.txt_user.setFixedHeight(45)
 
         self.txt_pass = QLineEdit()
         self.txt_pass.setPlaceholderText("Password")
         self.txt_pass.setEchoMode(QLineEdit.EchoMode.Password)
-        self.txt_pass.setStyleSheet(
-            "padding: 12px; border: 1px solid #4d7cfe; border-radius: 5px; background: #1e1e2f; color: white;")
+        self.txt_pass.setFixedHeight(45)
 
         self.txt_2fa = QLineEdit()
         self.txt_2fa.setPlaceholderText("2FA Code (6 Digits)")
         self.txt_2fa.setMaxLength(6)
         self.txt_2fa.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.txt_2fa.setStyleSheet(
-            "padding: 12px; border: 1px solid #e14eca; border-radius: 5px; background: #1e1e2f; color: white; font-weight: bold; letter-spacing: 5px;")
-
+        self.txt_2fa.setFixedHeight(45)
+        self.txt_2fa.setStyleSheet("letter-spacing: 5px; font-weight: bold; font-size: 16px;")
 
         self.txt_2fa.returnPressed.connect(self.submit_login)
 
@@ -66,15 +78,11 @@ class LoginWindow(QWidget):
         form_layout.addWidget(self.txt_2fa)
         layout.addWidget(form_frame)
 
-        # Login Button
-        # --------------------------------------------------------------------------------------------------------------
-        self.btn_login = QPushButton("Login")
+        self.btn_login = QPushButton(" Login")
+        self.btn_login.setIcon(qta.icon('fa5s.sign-in-alt', color='white'))
         self.btn_login.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_login.setFixedHeight(50)
-        self.btn_login.setStyleSheet("""
-            QPushButton { background-color: #4d7cfe; border-radius: 5px; font-weight: bold; font-size: 16px; }
-            QPushButton:hover { background-color: #3d63cb; }
-        """)
+        self.btn_login.setObjectName("PrimaryActionBtn")
         self.btn_login.clicked.connect(self.submit_login)
         layout.addWidget(self.btn_login)
 

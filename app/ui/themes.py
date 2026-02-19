@@ -1,121 +1,195 @@
-THEMES = {
-    "dark": {
-        "bg_main": "#1e1e2f",
-        "bg_panel": "#27293d",
-        "text_main": "#ffffff",
-        "text_sec": "#8f9bb3",
-        "accent": "#e14eca",
-        "accent_2": "#4d7cfe",
-        "gradient": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1d8cf8, stop:1 #3358f4)",
-        "danger": "#fd5d93",
-        "success": "#00f2c3",
-        "border": "none",
-        "hover": "#344675"
+def get_stylesheet(theme="dark"):
+    if theme == "dark":
+        bg_main = "#121212"
+        bg_sidebar = "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1e1e24, stop:1 #121212)"
 
-    },
+        glass_panel = "rgba(30, 30, 35, 0.7)"
+        glass_border = "rgba(255, 255, 255, 0.08)"  # Very faint border
 
-    "light": {
-        "bg_main": "#f5f6fa",
-        "bg_panel": "#ffffff",
-        "text_main": "#2c3e50",
-        "text_sec": "#95a5a6",
-        "accent": "#e14eca",
-        "accent_2": "#4d7cfe",
-        "gradient": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4d7cfe, stop:1 #9b59b6)",
-        "danger": "#e74c3c",
-        "success": "#2ecc71",
-        "border": "1px solid #dcdde1",
-        "hover": "#ecf0f1"
-    }
-}
+        text_primary = "#e0e0e0"
+        text_secondary = "#8f9bb3"
+        text_accent = "#d4af37"  # Roman Gold
+        btn_hover = "rgba(212, 175, 55, 0.15)"
 
-def get_stylesheet(theme_name="dark"):
-    t = THEMES[theme_name]
+        table_header_bg = "rgba(255, 255, 255, 0.03)"
+        table_row_border = "rgba(255, 255, 255, 0.05)"
+
+    else:  # Light Mode
+        bg_main = "#f4f4f8"
+        bg_sidebar = "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #ffffff, stop:1 #f0f0f0)"
+
+        glass_panel = "rgba(255, 255, 255, 0.9)"
+        glass_border = "rgba(0, 0, 0, 0.08)"  # Very faint border
+
+        text_primary = "#2d2d2d"
+        text_secondary = "#6b7280"
+        text_accent = "#0f5132"  # Dark Emerald
+        btn_hover = "rgba(15, 81, 50, 0.1)"
+
+        table_header_bg = "rgba(0, 0, 0, 0.02)"
+        table_row_border = "rgba(0, 0, 0, 0.06)"
 
     return f"""
-    QMainWindow {{ background-color: {t['bg_main']}; }}
-    QWidget {{ font-family: 'Segoe UI', sans-serif; font-size: 14px; color: {t['text_main']}; 
+    /* --- MAIN WINDOW --- */
+    QMainWindow {{ background-color: {bg_main}; }}
+
+    /* --- SIDEBAR --- */
+    #Sidebar {{
+        background: {bg_sidebar};
+        border-right: 2px solid {text_accent}; 
     }}
-    
-    /*  --------------- SIDEBAR --------------- */
-    
-    QFrame#Sidebar {{
-        background-color: {t['bg_main']}
+
+    #Logo {{
+        color: {text_accent};
+        font-family: "Times New Roman", serif;
+        font-size: 24px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        text-transform: uppercase;
     }}
-    
-    QLabel#logo {{
-        font-size: 22px;
-        font-weight: 900;
-        color: {t['text_sec']};
-        padding-left: 10px;
-    }}
-    
-    /* --------------- NAV BUTTONS --------------- */
-    
-    QPushButton#NavButton {{
+
+    /* --- NAVIGATION --- */
+    #NavButton {{
         background-color: transparent;
-        border: none;
+        color: {text_primary};
+        text-align: left;
+        padding: 12px 20px;
         border-radius: 8px;
-        color: {t['text_sec']};
-        text-alight: left;
-        padding: 15px 20px;
-        font-weight: 600;
+        font-family: "Segoe UI", sans-serif;
         font-size: 14px;
+        border: none;
     }}
-    
-    QPushButton#NavButton:hover {{
-        background-color: {t['hover']};
-        color: {t['text_main']};
+    #NavButton:hover {{
+        background-color: {btn_hover};
+        color: {text_accent};
+        border-left: 3px solid {text_accent};
     }}
-    
-    QPushButton#NavButton:checked {{
-        background-color: {t['accent_2']};
-        color: white;
+    #NavButton:checked {{
+        background-color: {btn_hover};
+        color: {text_accent};
+        font-weight: bold;
+        border-left: 4px solid {text_accent}; 
+    }}
+
+    /* --- PANELS & CARDS (Glassmorphism) --- */
+    #Card, #GradientCard {{
+        background-color: {glass_panel};
+        border: 1px solid {glass_border};
+        border-radius: 12px;
+    }}
+
+    #CardTitle {{
+        color: {text_secondary};
+        font-size: 13px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+
+    #CardValue {{
+        color: {text_accent};
+        font-size: 32px;
+        font-family: "Times New Roman", serif;
         font-weight: bold;
     }}
-    
-    /* --------------- CARDS --------------- */
-    
-    QFrame#Card {{
-        background-color: {t['bg_panel']};
-        border-radius: 12px;
-    }}
-    
-    QFrame#GradientCard {{
-        background-color: {t['accent_2']};  /* Fallback */
-        background: {t['gradient']};
-        border-radius: 12px;
-        color: white;
-    }}
-    
-    /* --------------- TEXT HIERARCHY --------------- */
-    
-    QLabel#PageTitle {{
+
+    #pageTitle {{
+        color: {text_primary};
+        font-family: "Times New Roman", serif;
         font-size: 28px;
-        font-weight: bold;
+        border-bottom: 1px solid {text_accent};
+        padding-bottom: 10px;
         margin-bottom: 20px;
     }}
-    
-    QLabel#CardTitle {{
-        font-size: 13px;
-        color: {t['text_sec']}; 
-        font-weight: 500;
+
+    /* --- INPUTS & BUTTONS --- */
+    QLabel {{ color: {text_primary}; }}
+
+    QLineEdit, QComboBox, QDateEdit {{
+        background-color: {glass_panel};
+        border: 1px solid {glass_border};
+        color: {text_primary};
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-family: "Nirmala UI", "Iskoola Pota", sans-serif;
     }}
-    
-    QLabel#CardValue {{
-        font-size: 32px;
+    QLineEdit:focus {{ border: 1px solid {text_accent}; }}
+
+    #GlassButton {{
+        background-color: {glass_panel};
+        border: 1px solid {glass_border};
+        color: {text_primary};
+        border-radius: 8px;
+        padding: 8px 15px;
         font-weight: bold;
-        margin-top: 5px;
     }}
-    
-    QLabel#CardIcon {{
-        font-size: 40px;
-        color: {t['accent']}
+    #GlassButton:hover {{
+        background-color: {btn_hover};
+        border: 1px solid {text_accent};
+        color: {text_accent};
     }}
-    
-    
-    /* --------------- SPECIAL FOR GRADIENT CARD --------------- */
-    
-    QLabel#WhiteText {{ color: white; }}
-       
-"""
+    #GlassButton:disabled {{
+        color: gray;
+        border: 1px solid transparent;
+    }}
+
+    #PrimaryActionBtn {{
+        background-color: {text_accent};
+        color: white;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 14px;
+    }}
+
+    /* --- MODERN TABS --- */
+    QTabWidget::pane {{ border: none; background: transparent; }}
+    QTabBar::tab {{
+        background: transparent;
+        color: {text_secondary};
+        padding: 10px 25px;
+        font-weight: bold;
+        font-size: 14px;
+        border-bottom: 3px solid transparent;
+        margin-right: 5px;
+    }}
+    QTabBar::tab:selected {{
+        color: {text_accent};
+        border-bottom: 3px solid {text_accent};
+    }}
+    QTabBar::tab:hover {{ background: {btn_hover}; color: {text_primary}; }}
+
+    /* --- SLEEK SAAS TABLES --- */
+    QTableWidget {{
+        background-color: transparent;
+        border: none;
+        color: {text_primary};
+        gridline-color: transparent; /* Removes heavy grid */
+        outline: none; /* Removes focus dotted line */
+    }}
+
+    QHeaderView::section {{
+        background-color: {table_header_bg};
+        color: {text_secondary};
+        font-weight: bold;
+        font-size: 13px;
+        border: none;
+        border-bottom: 1px solid {glass_border};
+        padding: 15px 10px;
+    }}
+
+    QTableWidget::item {{
+        border-bottom: 1px solid {table_row_border}; /* Faint horizontal line only */
+        padding: 5px 10px;
+    }}
+
+    QTableWidget::item:selected {{ 
+        background-color: {btn_hover}; 
+        color: {text_accent};
+    }}
+
+    /* Scrollbars */
+    QScrollBar:vertical {{ border: none; background: transparent; width: 6px; }}
+    QScrollBar::handle:vertical {{ background: {glass_border}; border-radius: 3px; }}
+    QScrollBar::handle:vertical:hover {{ background: {text_accent}; }}
+    """
+

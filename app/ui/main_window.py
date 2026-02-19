@@ -1,6 +1,6 @@
 import qtawesome as qta
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
-                             QPushButton, QLabel, QFrame, QStackedWidget, QSpacerItem, QSizePolicy)
+                             QPushButton, QLabel, QFrame, QStackedWidget, QGraphicsDropShadowEffect)
 from PyQt6.QtCore import Qt, QSize
 from app.ui.themes import get_stylesheet
 from app.controllers import ArchiveController
@@ -12,235 +12,200 @@ from app.ui.pages.reports_page import ReportsPage
 from app.ui.pages.disposal_page import DisposalPage
 
 
+class InteractiveNavBtn(QPushButton):
+    def __init__(self, text, icon_name, parent=None):
+        super().__init__(f"  {text}", parent)
+        self.icon_name = icon_name
+        self.setObjectName("NavButton")
+        self.setCheckable(True)
+        self.setAutoExclusive(True)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setIconSize(QSize(20, 20))
+        self.accent_color = "#d4af37"
+        self.setIcon(qta.icon(self.icon_name, color="#8f9bb3"))
+        self.toggled.connect(self.on_toggled)
+
+    def on_toggled(self, checked):
+        if checked:
+            self.setIcon(qta.icon(self.icon_name, color=self.accent_color))
+        else:
+            self.setIcon(qta.icon(self.icon_name, color="#8f9bb3"))
+
+    def update_accent(self, color):
+        self.accent_color = color
+        if self.isChecked():
+            self.setIcon(qta.icon(self.icon_name, color=self.accent_color))
+
+    def enterEvent(self, event):
+        spin = qta.Spin(self)
+        self.setIcon(qta.icon(self.icon_name, color=self.accent_color, animation=spin))
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        if not self.isChecked():
+            self.setIcon(qta.icon(self.icon_name, color="#8f9bb3"))
+        else:
+            self.setIcon(qta.icon(self.icon_name, color=self.accent_color))
+        super().leaveEvent(event)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
-        # 1. Initialize Backend
         self.controller = ArchiveController()
-
-        self.setWindowTitle("Weligepola DC Archive System")
-        self.resize(1280, 800)
+        self.setWindowTitle("Weligepola DC Vault")
+        self.resize(1280, 850)
         self.current_theme = "dark"
 
-        # --- MAIN CONTAINER ---
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QHBoxLayout(self.central_widget)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
 
-        # --- SIDEBAR ---
+        self.nav_buttons = []
+        self.dashboard_icons = []
+        self.dashboard_shadows = []
+
         self.setup_sidebar()
 
-        # --- MAIN CONTENT ---
         self.content_area = QWidget()
         self.content_layout = QVBoxLayout(self.content_area)
-        self.content_layout.setContentsMargins(40, 40, 40, 40)
+        self.content_layout.setContentsMargins(50, 40, 50, 40)
 
-        # Header
         self.page_header = QLabel("Dashboard")
         self.page_header.setObjectName("pageTitle")
         self.content_layout.addWidget(self.page_header)
 
-        # Stack (Pages)
         self.stack = QStackedWidget()
         self.stack.addWidget(self.create_dashboard_page())
-
-        # Index 1: Search Page
-        self.search_page = SearchPage(self.controller)
-        self.stack.addWidget(self.search_page)
-
-        # Index 2: Circulation Page
-        self.circulation_page = CirculationPage(self.controller)
-        self.stack.addWidget(self.circulation_page)
-
-        # Index 3: Add Page
-        self.add_file_page = AddFilePage(self.controller)
-        self.stack.addWidget(self.add_file_page)
-
-        # Index 4: Report Page
-        self.report_page = ReportsPage(self.controller)
-        self.stack.addWidget(self.report_page)
-
-        # Index 5: Settings Page
-        self.settings_page = SettingsPage(self.controller)
-        self.stack.addWidget(self.settings_page)
-
-        # Index 6: Disposal Page
-        self.disposal_page = DisposalPage(self.controller)
-        self.stack.addWidget(self.disposal_page)
-
+        self.stack.addWidget(SearchPage(self.controller))
+        self.stack.addWidget(CirculationPage(self.controller))
+        self.stack.addWidget(AddFilePage(self.controller))
+        self.stack.addWidget(ReportsPage(self.controller))
+        self.stack.addWidget(SettingsPage(self.controller))
+        self.stack.addWidget(DisposalPage(self.controller))
 
         self.stack.currentChanged.connect(self.on_page_changed)
-
         self.content_layout.addWidget(self.stack)
         self.main_layout.addWidget(self.content_area)
 
-        # Apply theme at the end of init
         self.apply_theme()
-
-        # 2. Trigger Initial Data Load
         self.refresh_stats()
 
     def refresh_stats(self):
-        """
-        Fetches real numbers from the Controller and updates the UI labels.
-        """
-        # Get dictionary like: {'total': 10, 'borrowed': 2, 'removed': 0}
         stats = self.controller.get_dashboard_stats()
-
-        # Update the specific labels we created in create_dashboard_page
-        self.lbl_total_files.setText(str(stats.get('total', 0)))
+        self.lbl_total_files.setText(f"{stats.get('total', 0):,}")
         self.lbl_borrowed.setText(str(stats.get('borrowed', 0)))
         self.lbl_removed.setText(str(stats.get('removed', 0)))
 
     def setup_sidebar(self):
         self.sidebar = QFrame()
         self.sidebar.setObjectName("Sidebar")
-        self.sidebar.setFixedWidth(260)
+        self.sidebar.setFixedWidth(280)
+
+        self.sidebar_shadow = QGraphicsDropShadowEffect()
+        self.sidebar_shadow.setBlurRadius(20)
+        self.sidebar_shadow.setXOffset(5)
+        self.sidebar_shadow.setColor(Qt.GlobalColor.black)
+        self.sidebar.setGraphicsEffect(self.sidebar_shadow)
+
         self.sidebar_layout = QVBoxLayout(self.sidebar)
-        self.sidebar_layout.setContentsMargins(20, 40, 20, 20)
+        self.sidebar_layout.setContentsMargins(25, 50, 25, 30)
         self.sidebar_layout.setSpacing(15)
 
-        # Logo
         logo_layout = QHBoxLayout()
-        logo_icon = QLabel()
-        logo_icon.setPixmap(qta.icon('fa5s.layer-group', color='#e14eca').pixmap(32, 32))
-        title = QLabel("WPDC Archive")
+        self.logo_icon_label = QLabel()
+        self.logo_icon_label.setPixmap(qta.icon('fa5s.landmark', color='#d4af37').pixmap(40, 40))
+        title = QLabel("ARCHIVUM")
         title.setObjectName("Logo")
-        logo_layout.addWidget(logo_icon)
+        logo_layout.addWidget(self.logo_icon_label)
         logo_layout.addWidget(title)
         logo_layout.addStretch()
+
         self.sidebar_layout.addLayout(logo_layout)
-        self.sidebar_layout.addSpacing(40)
+        self.sidebar_layout.addSpacing(50)
 
-        # Buttons with Icons
-        self.btn_dashboard = self.add_nav_btn("Dashboard", 'fa5s.chart-pie')
-        self.btn_dashboard.clicked.connect(lambda: self.stack.setCurrentIndex(0))
-
-        self.btn_search = self.add_nav_btn("Search Files", 'fa5s.search')
-        self.btn_search.clicked.connect(lambda: self.stack.setCurrentIndex(1))
-
-        self.btn_borrow = self.add_nav_btn("Circulation", 'fa5s.exchange-alt')
-        self.btn_borrow.clicked.connect(lambda: self.stack.setCurrentIndex(2))
-
-        self.btn_add = self.add_nav_btn("Add New File", 'fa5s.plus-circle')
-        self.btn_add.clicked.connect(lambda: self.stack.setCurrentIndex(3))
-
-        self.btn_reports = self.add_nav_btn("Reports", 'fa5s.file-alt')
-        self.btn_reports.clicked.connect(lambda: self.stack.setCurrentIndex(4))
-
-        self.btn_disposal =  self.add_nav_btn("Disposal", 'fa5s.trash-alt')
-        self.btn_disposal.clicked.connect(lambda: self.stack.setCurrentIndex(6))
-
-        self.btn_settings = self.add_nav_btn("Settings", 'fa5s.cog')
-        self.btn_settings.clicked.connect(lambda: self.stack.setCurrentIndex(5))
+        self.add_nav_btn("Dashboard", 'fa5s.chart-pie', 0)
+        self.add_nav_btn("Search Vault", 'fa5s.search', 1)
+        self.add_nav_btn("Circulation", 'fa5s.exchange-alt', 2)
+        self.add_nav_btn("New Entry", 'fa5s.plus-circle', 3)
+        self.add_nav_btn("Reports", 'fa5s.file-alt', 4)
+        self.add_nav_btn("Disposal", 'fa5s.skull', 6)
+        self.add_nav_btn("Settings", 'fa5s.cogs', 5)
 
         self.sidebar_layout.addStretch()
 
-        # Theme Toggle
-        self.btn_theme = QPushButton(" Switch Theme")
-        self.btn_theme.setIcon(qta.icon('fa5s.moon', color="#8f9bb3"))
+        self.btn_theme = QPushButton(" Toggle Light/Dark")
+        self.btn_theme.setIcon(qta.icon('fa5s.adjust', color="#8f9bb3"))
         self.btn_theme.setObjectName("NavButton")
         self.btn_theme.clicked.connect(self.toggle_theme)
         self.sidebar_layout.addWidget(self.btn_theme)
-
         self.main_layout.addWidget(self.sidebar)
 
-    def add_nav_btn(self, text, icon_name):
-        btn = QPushButton(f" {text}")
-        btn.setIcon(qta.icon(icon_name, color="#8f9bb3"))
-        btn.setIconSize(QSize(18, 18))
-        btn.setObjectName("NavButton")
-        btn.setCheckable(True)
-        btn.setAutoExclusive(True)
-        if text == "Dashboard": btn.setChecked(True)
+    def add_nav_btn(self, text, icon, index):
+        btn = InteractiveNavBtn(text, icon)
+        btn.clicked.connect(lambda: self.stack.setCurrentIndex(index))
+        if index == 0: btn.setChecked(True)
         self.sidebar_layout.addWidget(btn)
-        return btn
+        self.nav_buttons.append(btn)
 
     def create_dashboard_page(self):
         page = QWidget()
         layout = QGridLayout(page)
-        layout.setSpacing(25)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(30)
+        layout.setContentsMargins(10, 10, 10, 10)
 
-        # --- CREATE DYNAMIC LABELS ---
-        # We assign these to 'self' so we can access them in refresh_stats()
-        self.lbl_total_files = QLabel("Loading...", objectName="CardValue")
-        self.lbl_borrowed = QLabel("Loading...", objectName="CardValue")
-        self.lbl_removed = QLabel("Loading...", objectName="CardValue")
+        def create_glass_card(title, icon_name, value_label):
+            card = QFrame()
+            card.setObjectName("Card")
+            shadow = QGraphicsDropShadowEffect()
+            shadow.setBlurRadius(15)
+            shadow.setOffset(0, 4)
+            shadow.setColor(Qt.GlobalColor.black)
+            card.setGraphicsEffect(shadow)
+            self.dashboard_shadows.append(shadow)
 
-        # --- TOP ROW: STATS CARDS ---
+            cl = QVBoxLayout(card)
+            cl.setContentsMargins(25, 25, 25, 25)
 
-        # 1) Total files card (Gradient Style)
-        card1 = QFrame()
-        card1.setObjectName("GradientCard")
-        c1_layout = QVBoxLayout(card1)
-        c1_icon = QLabel()
-        c1_icon.setPixmap(qta.icon('fa5s.folder', color='white').pixmap(40, 40))
-        c1_layout.addWidget(c1_icon, alignment=Qt.AlignmentFlag.AlignRight)
-        c1_layout.addWidget(QLabel("Total Files", objectName="WhiteText"))
-        c1_layout.addWidget(self.lbl_total_files)  # <--- Variable Label
-        layout.addWidget(card1, 0, 0)
+            icn = QLabel()
+            icn.setPixmap(qta.icon(icon_name, color='#d4af37').pixmap(32, 32))
+            cl.addWidget(icn, alignment=Qt.AlignmentFlag.AlignRight)
+            self.dashboard_icons.append((icn, icon_name))
 
-        # 2) Borrowed (Manual build to insert variable label)
-        card2 = QFrame()
-        card2.setObjectName("Card")
-        c2_layout = QVBoxLayout(card2)
-        c2_layout.setContentsMargins(20, 20, 20, 20)
-        c2_icon = QLabel()
-        c2_icon.setPixmap(qta.icon('fa5s.hand-holding', color='#e14eca').pixmap(30, 30))
-        c2_layout.addWidget(c2_icon, alignment=Qt.AlignmentFlag.AlignRight)
-        c2_layout.addWidget(QLabel("Currently Borrowed", objectName="CardTitle"))
-        c2_layout.addWidget(self.lbl_borrowed)  # <--- Variable Label
-        layout.addWidget(card2, 0, 1)
+            cl.addWidget(QLabel(title, objectName="CardTitle"))
+            cl.addWidget(value_label)
+            return card
 
-        # 3) Removed/Overdue (Manual build to insert variable label)
-        card3 = QFrame()
-        card3.setObjectName("Card")
-        c3_layout = QVBoxLayout(card3)
-        c3_layout.setContentsMargins(20, 20, 20, 20)
-        c3_icon = QLabel()
-        c3_icon.setPixmap(qta.icon('fa5s.trash', color='#fd5d93').pixmap(30, 30))
-        c3_layout.addWidget(c3_icon, alignment=Qt.AlignmentFlag.AlignRight)
-        c3_layout.addWidget(QLabel("Removed Files", objectName="CardTitle"))
-        c3_layout.addWidget(self.lbl_removed)  # <--- Variable Label
-        layout.addWidget(card3, 0, 2)
+        self.lbl_total_files = QLabel("...", objectName="CardValue")
+        self.lbl_borrowed = QLabel("...", objectName="CardValue")
+        self.lbl_removed = QLabel("...", objectName="CardValue")
 
-        # --- MIDDLE ROW: BIG SECTIONS ---
+        layout.addWidget(create_glass_card("Total Holdings", "fa5s.university", self.lbl_total_files), 0, 0)
+        layout.addWidget(create_glass_card("Active Loans", "fa5s.hand-holding-usd", self.lbl_borrowed), 0, 1)
+        layout.addWidget(create_glass_card("Archived/Purged", "fa5s.archive", self.lbl_removed), 0, 2)
 
-        # "Quick action Panel"
-        action_card = QFrame()
-        action_card.setObjectName("Card")
-        ac_layout = QVBoxLayout(action_card)
-        ac_layout.addWidget(QLabel("Quick Actions", objectName="CardTitle"))
+        big_card = QFrame()
+        big_card.setObjectName("Card")
+        bcl = QVBoxLayout(big_card)
+        bcl.addWidget(QLabel("RECENT VAULT ACTIVITY", objectName="CardTitle"))
+        bcl.addSpacing(10)
 
-        # Add a couple of dummy action buttons
-        btn_quick_add = QPushButton("Scan New Document")
-        btn_quick_add.setStyleSheet("background: #2b3553; color: white; padding: 10px; border-radius: 5px;")
-        ac_layout.addWidget(btn_quick_add)
-        ac_layout.addStretch()
-        layout.addWidget(action_card, 1, 0, 1, 1)  # Row 1, Col 0, Span 1 row, 1 col
+        logs = [
+            "• RR-2024-001 retrieved by Admin (Audit)",
+            "• RR-2023-889 returned to Shelf 5",
+            "• New Batch (Land Division) added to Vault"
+        ]
+        for log in logs:
+            lbl = QLabel(log)
+            lbl.setStyleSheet(
+                "color: #8f9bb3; font-family: 'Consolas', monospace; font-size: 13px; margin-bottom: 5px;")
+            bcl.addWidget(lbl)
 
-        # "Recent Activity" Panel (Spans 2 columns)
-        recent_card = QFrame()
-        recent_card.setObjectName("Card")
-        rc_layout = QVBoxLayout(recent_card)
-        rc_layout.addWidget(QLabel("Recent Activity", objectName="CardTitle"))
-
-        # Dummy List of activity
-        for i in range(3):
-            lbl = QLabel(f"• File #102{i} returned by K. Perera")
-            lbl.setStyleSheet("color: #8f9bb3; padding: 5px;")
-            rc_layout.addWidget(lbl)
-
-        rc_layout.addStretch()
-        layout.addWidget(recent_card, 1, 1, 1, 2)  # Row 1, Col 1, Span 1 row, 2 cols
-
-        # Push everything up
-        layout.setRowStretch(2, 1)
-
+        bcl.addStretch()
+        layout.addWidget(big_card, 1, 0, 1, 3)
+        layout.setRowStretch(1, 1)
         return page
 
     def toggle_theme(self):
@@ -250,13 +215,31 @@ class MainWindow(QMainWindow):
     def apply_theme(self):
         self.setStyleSheet(get_stylesheet(self.current_theme))
 
+        if self.current_theme == "light":
+            accent = "#0f5132"
+            shadows_enabled = False
+        else:
+            accent = "#d4af37"
+            shadows_enabled = True
+
+        self.sidebar_shadow.setEnabled(shadows_enabled)
+        for shadow in self.dashboard_shadows:
+            shadow.setEnabled(shadows_enabled)
+
+        self.logo_icon_label.setPixmap(qta.icon('fa5s.landmark', color=accent).pixmap(40, 40))
+
+        for icn_label, icon_name in self.dashboard_icons:
+            icn_label.setPixmap(qta.icon(icon_name, color=accent).pixmap(32, 32))
+
+        for btn in self.nav_buttons:
+            btn.update_accent(accent)
+
+        self.style().polish(self)
 
     def on_page_changed(self, index):
-        """
-        Triggered every time the user switches pages.
-        If they switch TO the Dashboard (Index 0), we refresh the stats.
-        """
-
+        titles = ["Dashboard", "Search Vault", "Circulation Desk", "New Entry", "Reports & Export", "Settings",
+                  "Disposal"]
+        if 0 <= index < len(titles):
+            self.page_header.setText(titles[index])
         if index == 0:
-            print("Switched to Dashboard -> Refreshing Stats...")
             self.refresh_stats()
