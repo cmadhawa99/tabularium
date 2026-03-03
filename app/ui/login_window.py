@@ -1,382 +1,144 @@
 import math
-import qtawesome as qta
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
-                             QPushButton, QLabel, QFrame,
-                             QGraphicsDropShadowEffect)
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPoint
-from PyQt6.QtGui import (QPainter, QColor, QPen, QBrush, QFont,
-                          QLinearGradient, QRadialGradient, QPainterPath, QPalette)
+import customtkinter as ctk
+import tkinter as tk
+from PIL import Image, ImageTk
 
-from app.ui.themes import (
-    login_container_stylesheet, login_close_btn_stylesheet,
-    login_title_stylesheet, login_org_stylesheet,
-    login_badge_stylesheet, login_footer_stylesheet,
-    login_status_stylesheet, vault_input_field_stylesheet,
-    vault_input_normal_stylesheet, vault_input_active_stylesheet,
-    gold_button_stylesheet,
-)
+BG_COLOR = "#0d0c08"
+GOLD = "#d4af37"
+GOLD_DIM = "8a7840"
+GOLD_FAINT = "#3a3018"
+GOLD_VERY_FAINT = "#1a1608"
 
+class VaultInput(ctk.CTkFrame):
+    def __init_(self, master, placeholder, icon_text, is_password=False, max_len=None, width=388):
+        super().__init__(master, width=width, height=52, fg_color="#111009", border_color="#2a2515", border_width=1, corner_radius=4)
 
-class VaultCanvas(QWidget):
+        self.max_len = max_len
+        self.is_password = is_password
 
-    GOLD       = QColor("#d4af37")
-    GOLD_DIM   = QColor(212, 175, 55, 50)
-    GOLD_FAINT = QColor(212, 175, 55, 18)
+        self.icon_lbl = ctk.CTkLabel(self, text=icon_text, text_color=GOLD_DIM, font=("Arial",16))
+        self.icon_lbl.place(x=16, rely=0.5, anchor="w")
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.entry = ctk.CTkEntry(self, placeholder_text=placeholder, fg_color="transparent", border_width=0,
+                                  text_color="#ffffff", placeholder_text_color="#6a5e38", font=("Arial", 14))
 
-    def paintEvent(self, _event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        W, H = self.width(), self.height()
+        self.entry.place(x=48, rely=0.5, anchor="n", relwidth=0.5)
 
-        bg = QLinearGradient(0, 0, 0, H)
-        bg.setColorAt(0.0, QColor("#111009"))
-        bg.setColorAt(0.5, QColor("#0d0c08"))
-        bg.setColorAt(1.0, QColor("#080700"))
-        p.fillRect(self.rect(), QBrush(bg))
-
-        glow = QRadialGradient(W / 2, H * 0.38, H * 0.55)
-        glow.setColorAt(0.0, QColor(212, 175, 55, 20))
-        glow.setColorAt(1.0, QColor(0, 0, 0, 0))
-        p.fillRect(self.rect(), QBrush(glow))
-
-        m = 18
-        p.setPen(QPen(self.GOLD_DIM, 1.2))
-        p.drawRect(m, m, W - m*2, H - m*2)
-        p.setPen(QPen(self.GOLD_FAINT, 0.7))
-        p.drawRect(m+5, m+5, W-(m+5)*2, H-(m+5)*2)
-
-        cs = 22
-        p.setPen(QPen(self.GOLD_DIM, 1.5))
-        for cx, cy, sx, sy in [(m,m,1,1),(W-m,m,-1,1),(m,H-m,1,-1),(W-m,H-m,-1,-1)]:
-            p.drawLine(cx, cy, cx+sx*cs, cy)
-            p.drawLine(cx, cy, cx, cy+sy*cs)
-            p.drawLine(cx+sx*5, cy+sy*5, cx+sx*(cs-4), cy+sy*5)
-            p.drawLine(cx+sx*5, cy+sy*5, cx+sx*5, cy+sy*(cs-4))
-
-        arch_cx = W / 2
-        arch_cy = int(H * 0.10) + 52
-        arch_r  = 52
-        p.setPen(QPen(self.GOLD_DIM, 1.0))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawEllipse(QPoint(int(arch_cx), arch_cy), arch_r, arch_r)
-        p.setPen(QPen(self.GOLD_FAINT, 0.7))
-        p.drawEllipse(QPoint(int(arch_cx), arch_cy), arch_r+8, arch_r+8)
-        p.setPen(QPen(self.GOLD_DIM, 1.2))
-        for i in range(12):
-            a  = math.radians(i * 30)
-            dx = math.cos(a) * (arch_r - 7)
-            dy = math.sin(a) * (arch_r - 7)
-            p.drawPoint(int(arch_cx + dx), int(arch_cy + dy))
-
-        ry  = int(H * 0.37)
-        rm  = 44
-        rg  = 88
-        p.setPen(QPen(QColor(212,175,55,55), 1.0))
-        p.drawLine(rm, ry, W//2-rg, ry)
-        p.drawLine(W//2+rg, ry, W-rm, ry)
-        p.setPen(QPen(QColor(212,175,55,20), 0.6))
-        p.drawLine(rm, ry+3, W//2-rg, ry+3)
-        p.drawLine(W//2+rg, ry+3, W-rm, ry+3)
-
-        p.setPen(QPen(self.GOLD_DIM, 1.0))
-        p.setBrush(QBrush(self.GOLD_DIM))
-        d = QPainterPath()
-        d.moveTo(W/2, ry-4); d.lineTo(W/2+5, ry)
-        d.lineTo(W/2, ry+4); d.lineTo(W/2-5, ry)
-        d.closeSubpath()
-        p.drawPath(d)
-
-        p.setPen(QPen(self.GOLD_FAINT, 0.7))
-        p.drawLine(rm, int(H*0.92), W-rm, int(H*0.92))
-
-        p.setPen(QPen(QColor(212,175,55,10), 1))
-        for x in [int(W*0.12), int(W*0.88)]:
-            p.drawLine(x, int(H*0.33), x, int(H*0.90))
+        self.entry.bind("<FocusIn>", self._on_focus)
 
 
-class GoldDivider(QWidget):
+    def _limit_length(self, *args):
+        val = self.entry.get()
+        if len(val) > self.max_len:
+            self.entry.delete(self.max_len, tk.END)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedHeight(14)
+    def _on_focus(self, event):
+        self.configure(border_color=GOLD)
+        self.icon_lbl.configure(text_color=GOLD)
 
-    def paintEvent(self, _event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        W   = self.width()
-        mid = W // 2
-        y   = self.height() // 2
-        gap = 10
+        if self.is_password:
+            self.entry.configure(show="*")
 
-        p.setPen(QPen(QColor(212,175,55,55), 1.0))
-        p.drawLine(40, y, mid-gap, y)
-        p.drawLine(mid+gap, y, W-40, y)
+    def _on_focus_out(self, event):
+        self.configure(border_color="#2a515")
+        self.icon_lbl.configure(text_color=GOLD_DIM)
 
-        p.setPen(QPen(QColor(212,175,55,90), 1.2))
-        p.setBrush(QBrush(QColor(212,175,55,80)))
-        path = QPainterPath()
-        path.moveTo(mid, y-5); path.lineTo(mid+5, y)
-        path.lineTo(mid, y+5); path.lineTo(mid-5, y)
-        path.closeSubpath()
-        p.drawPath(path)
+        if self.is_password and len(self.entry.get()) == 0:
+            self.entry.configure(show="")
 
-
-class VaultInput(QWidget):
-
-    def __init__(self, placeholder: str, icon_name: str,
-                 echo_mode=QLineEdit.EchoMode.Normal, parent=None):
-        super().__init__(parent)
-        self._icon_name = icon_name
-        self.setFixedHeight(52)
-
-        h = QHBoxLayout(self)
-        h.setContentsMargins(16, 0, 16, 0)
-        h.setSpacing(12)
-
-        self._icon_lbl = QLabel()
-        self._icon_lbl.setFixedSize(18, 18)
-        self._icon_lbl.setPixmap(qta.icon(icon_name, color="#8a7840").pixmap(16, 16))
-        h.addWidget(self._icon_lbl)
-
-        self.field = QLineEdit()
-        self.field.setPlaceholderText(placeholder)
-        self.field.setEchoMode(echo_mode)
-        self.field.setFrame(False)
-        self.field.setStyleSheet(vault_input_field_stylesheet())
-        palette = self.field.palette()
-        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor("#6a5e38"))
-        self.field.setPalette(palette)
-        h.addWidget(self.field)
-
-        self._style_normal()
-        self.field.focusInEvent  = self._on_focus_in
-        self.field.focusOutEvent = self._on_focus_out
-
-    def _style_normal(self):
-        self.setStyleSheet(vault_input_normal_stylesheet())
-
-    def _style_active(self):
-        self.setStyleSheet(vault_input_active_stylesheet())
-
-    def _on_focus_in(self, e):
-        self._style_active()
-        self._icon_lbl.setPixmap(qta.icon(self._icon_name, color="#d4af37").pixmap(16, 16))
-        QLineEdit.focusInEvent(self.field, e)
-
-    def _on_focus_out(self, e):
-        self._style_normal()
-        self._icon_lbl.setPixmap(qta.icon(self._icon_name, color="#8a7840").pixmap(16, 16))
-        QLineEdit.focusOutEvent(self.field, e)
-
-    def text(self) -> str:
-        return self.field.text()
+    def get(self):
+        return self.entry.get()
 
     def clear(self):
-        self.field.clear()
+        self.entry.delete(0, tk.END)
+        if self.is_password:
+            self.entry.configure(show="")
 
-    def setFocus(self):
-        self.field.setFocus()
-
-    def connect_return(self, slot):
-        self.field.returnPressed.connect(slot)
-
-
-class GoldButton(QPushButton):
-
-    def __init__(self, text: str, icon_name: str, parent=None):
-        super().__init__(f"  {text}", parent)
-        self.setFixedHeight(50)
-        self.setIcon(qta.icon(icon_name, color="#0d0c08"))
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setStyleSheet(gold_button_stylesheet())
+    def focus_set(self):
+        self.entry.focus_set()
 
 
-class LoginWindow(QWidget):
-    login_successful = pyqtSignal(str)
-
+class LoginWindow(ctk.CTk):
     def __init__(self, controller):
         super().__init__()
-        self.controller  = controller
-        self._drag_pos   = None
 
-        self.setWindowTitle("Archivum — Secure Access")
-        self.setFixedSize(480, 650)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.controller = controller
+        self.on_login_successful = None
 
+        self.title ("Archive - Secure Access")
+        self.geometry("480x650")
+        self.resizable(False, False)
+        self.configure(fg_color=BG_COLOR)
+
+        self.bg_photo = None
+
+        self._build_canvas_background()
         self._build_ui()
 
-    # __________ DRAG SUPPORT __________
+    def _generate_gradient_image(self, width, height):
+        img = Image.new("RGBA", (width, height))
+        pixels = img.load()
 
-    def mousePressEvent(self, e):
-        if e.button() == Qt.MouseButton.LeftButton:
-            self._drag_pos = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
+        c_top = (17, 16, 9)
+        c_mid = (13, 12, 8)
+        c_bottom = (8, 7, 0)
 
-    def mouseMoveEvent(self, e):
-        if self._drag_pos and e.buttons() == Qt.MouseButton.LeftButton:
-            self.move(e.globalPosition().toPoint() - self._drag_pos)
+        glow_color = (212, 175, 55)
+        glow_center = (width // 2, int(height * 0.38))
+        glow_radius = height * 0.55
 
-    def mouseReleaseEvent(self, _e):
-        self._drag_pos = None
+        linear_colors = []
+        for y in range(height):
+            if y < height / 2:
+                ratio = y / (height/2)
+                r = c_top[0] * (1 - ratio) + c_mid[0] * ratio
+                g = c_top[1] * (1 - ratio) + c_mid[1] * ratio
+                b = c_top[2] * (1 - ratio) + c_mid[2] * ratio
+            else:
+                ratio = (y - height / 2) / (height / 2)
+                r = c_mid[0] * (1 - ratio) + c_bottom[0] * ratio
+                g = c_mid[1] * (1 - ratio) + c_bottom[1] * ratio
+                b = c_mid[2] * (1 - ratio) + c_bottom[2] * ratio
 
-    # __________ BUILD UI __________
+            linear_colors.append((r, g, b))
 
-    def _build_ui(self):
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
+        for y in range(height):
+            base_r, base_g, base_b = linear_colors[y]
+            dy = y - glow_center[1]
+            dy2 = dy * dy
+            for x in range(width):
+                dx = x - glow_center[0]
+                dist = math.sqrt(dx * dx + dy2)
 
-        container = QFrame()
-        container.setObjectName("LoginContainer")
-        container.setStyleSheet(login_container_stylesheet())
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(70)
-        shadow.setOffset(0, 14)
-        shadow.setColor(QColor(0, 0, 0, 210))
-        container.setGraphicsEffect(shadow)
-        root.addWidget(container)
+                if dist < glow_radius:
+                    glow_ratio = 1.0 - (dist / glow_radius)
+                    alpha = glow_ratio * 0.12
+                    r_out = int(base_r * (1 - alpha) + glow_color[0] * alpha)
+                    g_out = int(base_g * (1 - alpha) + glow_color[1] * alpha)
+                    b_out = int(base_b * (1 - alpha) + glow_color[2] * alpha)
+                    pixels[x, y] = (r_out, g_out, b_out, 255)
 
-        self._canvas = VaultCanvas(container)
-        self._canvas.setGeometry(0, 0, 480, 650)
-        self._canvas.lower()
+                else:
+                    pixels[x, y] = (int(base_r), int(base_g), int(base_b), 255)
 
-        v = QVBoxLayout(container)
-        v.setContentsMargins(0, 0, 0, 0)
-        v.setSpacing(0)
+            return ImageTk.PhotoImage(img)
 
-        # __________ Top bar with close button __________
 
-        top = QHBoxLayout()
-        top.setContentsMargins(16, 14, 16, 0)
-        top.addStretch()
-        btn_close = QPushButton()
-        btn_close.setFixedSize(28, 28)
-        btn_close.setIcon(qta.icon("fa5s.times", color="#4a4020"))
-        btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_close.setStyleSheet(login_close_btn_stylesheet())
-        btn_close.clicked.connect(self.close)
-        top.addWidget(btn_close)
-        v.addLayout(top)
+    def _build_canvas_background(self):
+        self.canvas = tk.Canvas(self, width=480, height=650, highlightthickness=0)
+        self.canvas.place(x=0, y=0)
 
-        # __________ Seal icon __________
+        Width, Height = 480, 650
 
-        v.addSpacing(12)
-        seal = QLabel()
-        seal.setPixmap(qta.icon("fa5s.landmark", color="#d4af37").pixmap(46, 46))
-        seal.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        v.addWidget(seal)
+        self.bg_photo = self._generate_gradient_image(Width, Height)
+        self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw")
 
-        # __________ Title __________
+        m = 18
 
-        v.addSpacing(12)
-        lbl_title = QLabel("ARCHIVUM")
-        lbl_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lbl_title.setStyleSheet(login_title_stylesheet())
-        v.addWidget(lbl_title)
+        self.canvas.create_rectangle(m, m, Width-m, Height-m, outline=GOLD_FAINT, width=1)
+        self.canvas.create_rectangle(m+5, m+5, Width-(m+5), Height-(m+5), outline=GOLD_VERY_FAINT, width=1)
 
-        lbl_org = QLabel("WELIGEPOLA DISTRICT COUNCIL")
-        lbl_org.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lbl_org.setStyleSheet(login_org_stylesheet())
-        v.addWidget(lbl_org)
-
-        # __________ Divider __________
-
-        v.addSpacing(18)
-        v.addWidget(GoldDivider())
-        v.addSpacing(16)
-
-        # __________ Access badge __________
-
-        badge = QHBoxLayout()
-        badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ic = QLabel()
-        ic.setPixmap(qta.icon("fa5s.shield-alt", color="#3a3018").pixmap(11, 11))
-        bl = QLabel("AUTHORIZED ACCESS ONLY")
-        bl.setStyleSheet(login_badge_stylesheet())
-        badge.addWidget(ic)
-        badge.addSpacing(6)
-        badge.addWidget(bl)
-        v.addLayout(badge)
-
-        # __________ Input fields __________
-
-        v.addSpacing(26)
-        form = QVBoxLayout()
-        form.setContentsMargins(46, 0, 46, 0)
-        form.setSpacing(14)
-
-        self._inp_user = VaultInput("Username", "fa5s.user")
-        self._inp_pass = VaultInput("Password", "fa5s.lock",
-                                    echo_mode=QLineEdit.EchoMode.Password)
-        self._inp_2fa  = VaultInput("2FA Code  (6 digits)", "fa5s.key")
-        self._inp_2fa.field.setMaxLength(6)
-        self._inp_2fa.field.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._inp_2fa.connect_return(self._submit)
-
-        for inp in (self._inp_user, self._inp_pass, self._inp_2fa):
-            form.addWidget(inp)
-
-        v.addLayout(form)
-
-        # __________ Login button __________
-
-        v.addSpacing(26)
-        btn_wrap = QHBoxLayout()
-        btn_wrap.setContentsMargins(46, 0, 46, 0)
-        self._btn_login = GoldButton("ENTER THE VAULT", "fa5s.sign-in-alt")
-        self._btn_login.clicked.connect(self._submit)
-        btn_wrap.addWidget(self._btn_login)
-        v.addLayout(btn_wrap)
-
-        # __________ Status label __________
-
-        v.addSpacing(14)
-        self._lbl_status = QLabel("")
-        self._lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._lbl_status.setFixedHeight(18)
-        self._lbl_status.setStyleSheet(login_status_stylesheet())
-        v.addWidget(self._lbl_status)
-
-        # __________ Footer __________
-
-        v.addStretch()
-        footer = QLabel("ARCHIVUM  ·  AUCTORITAS ET CUSTODIA")
-        footer.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        footer.setStyleSheet(login_footer_stylesheet())
-        v.addWidget(footer)
-
-    # __________ SUBMIT __________
-
-    def _submit(self):
-        user = self._inp_user.text().strip()
-        pwd  = self._inp_pass.text().strip()
-        code = self._inp_2fa.text().strip()
-
-        if not user or not pwd or not code:
-            self._show_error("All fields are required.")
-            return
-
-        self._btn_login.setEnabled(False)
-        self._btn_login.setText("  AUTHENTICATING...")
-
-        success, msg, role = self.controller.attempt_login(user, pwd, code)
-
-        if success:
-            self._lbl_status.setStyleSheet(login_status_stylesheet(success=True))
-            self._lbl_status.setText("Access granted — opening vault…")
-            QTimer.singleShot(700, lambda: self.login_successful.emit(role))
-        else:
-            self._btn_login.setEnabled(True)
-            self._btn_login.setText("  ENTER THE VAULT")
-            self._show_error(msg)
-            self._inp_pass.clear()
-            self._inp_2fa.clear()
-            self._inp_pass.setFocus()
-
-    def _show_error(self, msg: str):
-        self._lbl_status.setStyleSheet(login_status_stylesheet(success=False))
-        self._lbl_status.setText(msg)
-        QTimer.singleShot(3500, lambda: self._lbl_status.setText(""))
+        cs = 22
+        corners = [(m, m, 1, 1), (Width-m, m, -1, 1), (m, Height-m, 1, -1), (Width-m, Height-m, -1, -1)]
+        for cx, cy, sx, sy in corners:
+            self.canvas.create_line
