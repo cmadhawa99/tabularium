@@ -1,11 +1,13 @@
+import code
 import math
 import customtkinter as ctk
 import tkinter as tk
 from PIL import Image, ImageTk
+from sqlalchemy.sql.functions import user
 
 BG_COLOR = "#0d0c08"
 GOLD = "#d4af37"
-GOLD_DIM = "8a7840"
+GOLD_DIM = "#8a7840"
 GOLD_FAINT = "#3a3018"
 GOLD_VERY_FAINT = "#1a1608"
 
@@ -141,4 +143,46 @@ class LoginWindow(ctk.CTk):
         cs = 22
         corners = [(m, m, 1, 1), (Width-m, m, -1, 1), (m, Height-m, 1, -1), (Width-m, Height-m, -1, -1)]
         for cx, cy, sx, sy in corners:
-            self.canvas.create_line
+            self.canvas.create_line(cx, cy, cx+sx*cs, cy, fill=GOLD_FAINT, width=2)
+            self.canvas.create_line(cx, cy, cx, cy+sy*cs, fill=GOLD_FAINT, width=2)
+            self.canvas.create_line(cx+sx*5, cy+sy*5, cx+sx*(cs-4), cy+sy*5, fill=GOLD_FAINT, width=2)
+            self.canvas.create_line(cx+sx*5, cy+sy*5, cx+sx*5, cy+sy*(cs-4), fill=GOLD_FAINT, width=2)
+
+        arch_cx = Width / 2
+        arch_cy = int(Height * 0.10) + 52
+        arch_r = 52
+
+        self.canvas.create_oval(arch_cx-arch_r, arch_cy-arch_r, arch_cx+arch_r, arch_cy+arch_r, outline=GOLD_FAINT)
+        self.canvas.create_oval(arch_cx-(arch_r+8), arch_cy-(arch_r+8), arch_cx+(arch_r+8), arch_cy+(arch_r+8), outline=GOLD_VERY_FAINT)
+
+        for i in range(12):
+            a = math.radians(i * 30)
+            dx = math.cos(a) * (arch_r - 7)
+            dy = math.sin(a) * (arch_r - 7)
+            self.canvas.create_oval(arch_cx+dx-1, arch_cy+dy-1, arch_cx+dx+1, arch_cy+dy+1, fill=GOLD_FAINT, outline=GOLD_FAINT)
+
+        ry = int(Height * 0.37)
+        rm = 44
+        rg = 88
+        self.canvas.create_line(rm, ry, Width//2-rg, ry, fill=GOLD_FAINT)
+        self.canvas.create_line(Width//2+rg, ry, Width-rm, ry, fill=GOLD_FAINT)
+        self.canvas.create_line(rm, ry+3, Width//2-rg, ry+3, fill=GOLD_VERY_FAINT)
+        self.canvas.create_line(Width//2+rg, ry+3, Width-m,ry+3, fill=GOLD_VERY_FAINT)
+        self.canvas.create_polygon(Width/2, ry-4, Width/2+5, ry, Width/2, ry+4, Width/2-5, ry, fill=GOLD_FAINT)
+
+        self.canvas.create_line(rm, int(Height*0.92), Width-rm, int(Height*0.92), fill=GOLD_VERY_FAINT)
+        for x in [int(Width*0.12), int(Width*0.88)]:
+            self.canvas.create_line(x, int(Height * 0.33), x, int(Height * 0.90), fill=GOLD_VERY_FAINT)
+
+
+        self.canvas.create_text(240,117, text="🏛", fill=GOLD, font=("Arial", 38))
+        self.canvas.create_text(240, 185, text="A R C H I V E", fill=GOLD, font=("Georgia", 22, "bold"))
+        self.canvas.create_text(240, 210, text= "W E L I G E P O L A   D I V I S I O N A L   C O U N C I L", fill=GOLD_DIM, font=("Arial", 10))
+        self.canvas.create_text(240, 285, text="🛡   AUTHORIZED ACCESS ONLY", fill=GOLD_DIM, font=("Arial", 10))
+        self.canvas.create_text(240, 628, text="ARCHIVUM  ·  AUCTORITAS ET CUSTODIA", fill=GOLD_VERY_FAINT, font=("Arial", 9))
+
+        self.status_text = self.canvas.create_text(240, 605, text="", fill="#ff5252", font=("Arial", 12))
+
+
+    def _build_ui(self):
+        return
