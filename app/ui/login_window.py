@@ -1,9 +1,8 @@
-import code
 import math
 import customtkinter as ctk
 import tkinter as tk
+import ctypes
 from PIL import Image, ImageTk
-from sqlalchemy.sql.functions import user
 
 BG_COLOR = "#0d0c08"
 GOLD = "#d4af37"
@@ -12,7 +11,7 @@ GOLD_FAINT = "#3a3018"
 GOLD_VERY_FAINT = "#1a1608"
 
 class VaultInput(ctk.CTkFrame):
-    def __init_(self, master, placeholder, icon_text, is_password=False, max_len=None, width=388):
+    def __init__(self, master, placeholder, icon_text, is_password=False, max_len=None, width=388):
         super().__init__(master, width=width, height=52, fg_color="#111009", border_color="#2a2515", border_width=1, corner_radius=4)
 
         self.max_len = max_len
@@ -24,9 +23,12 @@ class VaultInput(ctk.CTkFrame):
         self.entry = ctk.CTkEntry(self, placeholder_text=placeholder, fg_color="transparent", border_width=0,
                                   text_color="#ffffff", placeholder_text_color="#6a5e38", font=("Arial", 14))
 
-        self.entry.place(x=48, rely=0.5, anchor="n", relwidth=0.5)
+        self.entry.place(x=48, rely=0.5, anchor="w", relwidth=0.8)
 
         self.entry.bind("<FocusIn>", self._on_focus)
+        self.entry.bind("<FocusOut>", self._on_focus_out)
+        if max_len:
+            self.entry.bind("<KeyRelease>",self._limit_length())
 
 
     def _limit_length(self, *args):
@@ -42,7 +44,7 @@ class VaultInput(ctk.CTkFrame):
             self.entry.configure(show="*")
 
     def _on_focus_out(self, event):
-        self.configure(border_color="#2a515")
+        self.configure(border_color="#2a2515")
         self.icon_lbl.configure(text_color=GOLD_DIM)
 
         if self.is_password and len(self.entry.get()) == 0:
@@ -71,6 +73,17 @@ class LoginWindow(ctk.CTk):
         self.geometry("480x650")
         self.resizable(False, False)
         self.configure(fg_color=BG_COLOR)
+
+        try:
+            self.iconbitmap("icon.ico")
+        except Exception:
+            pass
+
+        try:
+            myappid = 'archivum.secure.login.1.0'  # Arbitrary unique ID
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except Exception:
+            pass
 
         self.bg_photo = None
 
@@ -123,7 +136,7 @@ class LoginWindow(ctk.CTk):
                 else:
                     pixels[x, y] = (int(base_r), int(base_g), int(base_b), 255)
 
-            return ImageTk.PhotoImage(img)
+        return ImageTk.PhotoImage(img)
 
 
     def _build_canvas_background(self):
@@ -183,6 +196,51 @@ class LoginWindow(ctk.CTk):
 
         self.status_text = self.canvas.create_text(240, 605, text="", fill="#ff5252", font=("Arial", 12))
 
-
     def _build_ui(self):
-        return
+
+        self.inp_user = VaultInput(self, "Username", "👤")
+        self.inp_user.place(x=46, y=340)
+
+        self.inp_pass = VaultInput(self, "Password", "🔒", is_password=True)
+        self.inp_pass.place(x=46, y=402)
+
+        self.inp_2fa = VaultInput(self, "2FA Code (6 digits)", "🔑", max_len=6)
+        self.inp_2fa.entry.configure(justify="center")
+        self.inp_2fa.place(x=46, y=464)
+        self.inp_2fa.entry.bind("<Return>", lambda e: self._submit())
+
+        self.btn_login = ctk.CTkButton(self, text="➔  ENTER THE VAULT", width=388, height=50, fg_color=GOLD, hover_color="#b5952f", text_color=BG_COLOR,
+                                       font=("Arial", 14, "bold"), command=self._submit)
+
+        self.btn_login.place(x=46, y=540)
+
+
+    def _submit(self):
+        user = self.inp_user.get().strip()
+        pwd = self.inp_pass.get().strip()
+        code = self.inp_2fa.get().strip()
+
+        if not user or not pwd or not code:
+            self._show_error("All fields are required.")
+            return
+
+        self.btn_login.configure(state="disabled", text="➔  AUTHENTICATING...")
+
+        success, msg, role = self.controller.attempt_login(user, pwd, code)
+
+        if success:
+            self.canvas.itemconfig(self.status_text, text="Access granted - opening vault...", fill="#4caf50")
+
+            if self.on_login_successful:
+                self.after(700, lambda: self.on_login_successful(role))
+
+        else:
+            self.btn_login.configure(state="normal", text="➔  ENTER THE VAULT")
+            self._show_error(msg)
+            self.inp_pass.clear()
+            self.inp_2fa.clear()
+            self.inp_pass.focus_set()
+
+    def _show_error(self, msg: str):
+        self.canvas.itemconfig(self.status_text, text=msg, fill="#ff5252")
+        self.after(3500, lambda: self.canvas.itemconfig(self.status_text, text=""))
